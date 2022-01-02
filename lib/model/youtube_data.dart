@@ -26,19 +26,20 @@ class YoutubeData {
 }
 
 class Video {
-  Video({
-    required this.youtubeId,
-    required this.title,
-    required this.getdate,
-    required this.url,
-    this.bunrui,
-  });
+  Video(
+      {required this.youtubeId,
+      required this.title,
+      required this.getdate,
+      required this.url,
+      this.bunrui,
+      this.special});
 
   String youtubeId;
   String title;
   String getdate;
   String url;
   dynamic bunrui;
+  dynamic special;
 
   factory Video.fromJson(Map<String, dynamic> json) => Video(
         youtubeId: json["youtube_id"],
@@ -46,6 +47,7 @@ class Video {
         getdate: json["getdate"],
         url: json["url"],
         bunrui: json["bunrui"],
+        special: json["special"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -54,5 +56,6 @@ class Video {
         "getdate": getdate,
         "url": url,
         "bunrui": bunrui,
+        "special": special,
       };
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:youtubeplayer/screens/home_screen.dart';
 
 //import 'package:youtubeplayer/screens/youtube_play_screen.dart';
 
@@ -28,6 +29,8 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
   List<Video> _youtube = [];
 
   final List<String> _selectedList = [];
+
+  final List<String> _specialList = [];
 
   /// 初期動作
   @override
@@ -61,6 +64,12 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
     _youtube = youtubeData.data;
     ////////////////////////////////////////
 
+    _youtube.forEach((element) {
+      if (element.special == '1') {
+        _specialList.add(element.youtubeId);
+      }
+    });
+
     setState(() {});
   }
 
@@ -93,18 +102,28 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
                         style: ElevatedButton.styleFrom(
                           primary: Colors.redAccent.withOpacity(0.3),
                         ),
-                        onPressed: () => _uploadDeleteItems(),
-                        child: const Text('削除する'),
+                        onPressed: () => _uploadSpecialItems(),
+                        child: const Text('選出変更'),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           primary: Colors.redAccent.withOpacity(0.3),
                         ),
                         onPressed: () => _uploadEraseItems(),
-                        child: const Text('分類を消去する'),
+                        child: const Text('分類消去'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.redAccent.withOpacity(0.3),
+                        ),
+                        onPressed: () => _uploadDeleteItems(),
+                        child: const Text('削除'),
                       ),
                     ),
                   ],
@@ -127,19 +146,43 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
 
   /// リストアイテム表示
   Widget _listItem({required int position}) {
+    var date = _youtube[position].getdate;
+    var year = date.substring(0, 4);
+    var month = date.substring(4, 6);
+    var day = date.substring(6);
+
     return Card(
       color: _getSelectedBgColor(youtubeId: _youtube[position].youtubeId),
       child: ListTile(
         title: DefaultTextStyle(
           style: const TextStyle(fontSize: 12),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_youtube[position].title),
               Container(
-                alignment: Alignment.topRight,
-                child: Text(
-                    '${_youtube[position].youtubeId} / ${_youtube[position].getdate}'),
+                padding: EdgeInsets.only(right: 10),
+                child: (_youtube[position].special == '1')
+                    ? Icon(
+                        Icons.star,
+                        color: Colors.greenAccent,
+                      )
+                    : Icon(
+                        Icons.check_box_outline_blank,
+                        color: Colors.black.withOpacity(0.2),
+                      ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${_youtube[position].title}'),
+                    Container(
+                      alignment: Alignment.topRight,
+                      child: Text(
+                          '${_youtube[position].youtubeId} / ${year}/${month}/${day}'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -222,7 +265,7 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
       );
     }
 
-//    _goBunruiListScreen();
+    _goBunruiListScreen();
   }
 
   ///
@@ -232,6 +275,25 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
     if (await canLaunch(url)) {
       await launch(url);
     } else {}
+  }
+
+  ///
+  void _uploadSpecialItems() {
+    if (_selectedList.isNotEmpty) {
+      var _list = [];
+      for (var element in _selectedList) {
+        var sp = (_specialList.contains(element)) ? 0 : 1;
+
+        _list.add("$element|${sp}");
+      }
+
+      _logic.uploadBunruiItems(
+        bunrui: 'special',
+        bunruiItems: _list,
+      );
+    }
+
+    _goHomeScreen();
   }
 
   ///////////////////////////////////////////////////////
@@ -247,7 +309,17 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
     );
   }
 
-  //
+  ///
+  void _goHomeScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HomeScreen(),
+      ),
+    );
+  }
+
+//
   // void _goYoutubePlayScreen({required String youtubeId}) {
   //   Navigator.push(
   //     context,
