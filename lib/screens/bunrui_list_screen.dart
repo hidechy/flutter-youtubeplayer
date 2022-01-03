@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:youtubeplayer/screens/home_screen.dart';
 
 //import 'package:youtubeplayer/screens/youtube_play_screen.dart';
 
@@ -64,11 +63,11 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
     _youtube = youtubeData.data;
     ////////////////////////////////////////
 
-    _youtube.forEach((element) {
+    for (var element in _youtube) {
       if (element.special == '1') {
         _specialList.add(element.youtubeId);
       }
-    });
+    }
 
     setState(() {});
   }
@@ -138,9 +137,12 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
 
   ///
   Widget _movieList() {
-    return ListView.builder(
+    return ListView.separated(
       itemCount: _youtube.length,
       itemBuilder: (context, int position) => _listItem(position: position),
+      separatorBuilder: (BuildContext context, int index) {
+        return const Divider(color: Colors.white);
+      },
     );
   }
 
@@ -156,42 +158,65 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
       child: ListTile(
         title: DefaultTextStyle(
           style: const TextStyle(fontSize: 12),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: EdgeInsets.only(right: 10),
-                child: (_youtube[position].special == '1')
-                    ? Icon(
-                        Icons.star,
-                        color: Colors.greenAccent,
-                      )
-                    : Icon(
-                        Icons.check_box_outline_blank,
-                        color: Colors.black.withOpacity(0.2),
-                      ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('${_youtube[position].title}'),
-                    Container(
-                      alignment: Alignment.topRight,
-                      child: Text(
-                          '${_youtube[position].youtubeId} / ${year}/${month}/${day}'),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: () => _addSelectedAry(
+                        youtubeId: _youtube[position].youtubeId),
+                    child: const Icon(
+                      Icons.control_point,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 180,
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          child: FadeInImage.assetNetwork(
+                            placeholder: 'assets/images/no_image.png',
+                            image:
+                                'https://img.youtube.com/vi/${_youtube[position].youtubeId}/mqdefault.jpg',
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          child: Container(
+                            width: MediaQuery.of(context).size.width - 140,
+                            color: Colors.black.withOpacity(0.5),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_youtube[position].title),
+                                const SizedBox(height: 5),
+                                Text(
+                                    '${_youtube[position].youtubeId} / $year/$month/$day'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    child: (_youtube[position].special == '1')
+                        ? const Icon(
+                            Icons.star,
+                            color: Colors.greenAccent,
+                          )
+                        : Icon(
+                            Icons.check_box_outline_blank,
+                            color: Colors.black.withOpacity(0.2),
+                          ),
+                  ),
+                ],
               ),
             ],
-          ),
-        ),
-        leading: GestureDetector(
-          onTap: () => _addSelectedAry(youtubeId: _youtube[position].youtubeId),
-          child: const Icon(
-            Icons.control_point,
-            color: Colors.white,
           ),
         ),
 
@@ -235,14 +260,14 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
   }
 
   ///
-  void _uploadDeleteItems() {
+  void _uploadDeleteItems() async {
     if (_selectedList.isNotEmpty) {
       var _list = [];
       for (var element in _selectedList) {
         _list.add("'$element'");
       }
 
-      _logic.uploadBunruiItems(
+      await _logic.uploadBunruiItems(
         bunrui: 'delete',
         bunruiItems: _list,
       );
@@ -252,14 +277,14 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
   }
 
   ///
-  void _uploadEraseItems() {
+  void _uploadEraseItems() async {
     if (_selectedList.isNotEmpty) {
       var _list = [];
       for (var element in _selectedList) {
         _list.add("'$element'");
       }
 
-      _logic.uploadBunruiItems(
+      await _logic.uploadBunruiItems(
         bunrui: 'erase',
         bunruiItems: _list,
       );
@@ -278,22 +303,22 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
   }
 
   ///
-  void _uploadSpecialItems() {
+  void _uploadSpecialItems() async {
     if (_selectedList.isNotEmpty) {
       var _list = [];
       for (var element in _selectedList) {
         var sp = (_specialList.contains(element)) ? 0 : 1;
 
-        _list.add("$element|${sp}");
+        _list.add("$element|$sp");
       }
 
-      _logic.uploadBunruiItems(
+      await _logic.uploadBunruiItems(
         bunrui: 'special',
         bunruiItems: _list,
       );
     }
 
-    _goHomeScreen();
+    _goBunruiListScreen();
   }
 
   ///////////////////////////////////////////////////////
@@ -305,16 +330,6 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
         builder: (_) => BunruiListScreen(
           bunrui: widget.bunrui,
         ),
-      ),
-    );
-  }
-
-  ///
-  void _goHomeScreen() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => HomeScreen(),
       ),
     );
   }
