@@ -10,6 +10,7 @@ import '../model/draggable_list.dart';
 import '../logic/logic.dart';
 
 import '../utilities/utility.dart';
+import 'home_screen.dart';
 
 class BunruiSettingScreen extends StatefulWidget {
   final String bunrui;
@@ -119,6 +120,20 @@ class _BunruiSettingScreenState extends State<BunruiSettingScreen> {
         title: Text(widget.bunrui),
         backgroundColor: Colors.redAccent.withOpacity(0.3),
         centerTitle: true,
+
+        //-------------------------//これを消すと「←」が出てくる（消さない）
+        leading: const Icon(
+          Icons.check_box_outline_blank,
+          color: Color(0xFF2e2e2e),
+        ),
+        //-------------------------//これを消すと「←」が出てくる（消さない）
+
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => _goHomeScreen(),
+          ),
+        ],
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -211,7 +226,7 @@ class _BunruiSettingScreenState extends State<BunruiSettingScreen> {
   ) {}
 
   ///
-  void _dispBunruiItem() {
+  void _dispBunruiItem() async {
     bunruiItems = [];
 
     for (var value in lists) {
@@ -251,6 +266,20 @@ class _BunruiSettingScreenState extends State<BunruiSettingScreen> {
       );
     }
 
-    Navigator.pop(context, true);
+    await Future.delayed(const Duration(seconds: 3));
+
+    _goHomeScreen();
+  }
+
+  /////////////////////////////////////////////////////
+
+  ///
+  void _goHomeScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomeScreen(),
+      ),
+    );
   }
 }

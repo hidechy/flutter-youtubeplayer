@@ -11,6 +11,7 @@ import '../model/youtube_data.dart';
 import '../utilities/utility.dart';
 
 import '../logic/logic.dart';
+import 'home_screen.dart';
 
 class BunruiListScreen extends StatefulWidget {
   final String bunrui;
@@ -80,6 +81,20 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
         title: Text(widget.bunrui),
         backgroundColor: Colors.redAccent.withOpacity(0.3),
         centerTitle: true,
+
+        //-------------------------//これを消すと「←」が出てくる（消さない）
+        leading: const Icon(
+          Icons.check_box_outline_blank,
+          color: Color(0xFF2e2e2e),
+        ),
+        //-------------------------//これを消すと「←」が出てくる（消さない）
+
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => _goHomeScreen(),
+          ),
+        ],
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -156,6 +171,13 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
     return Card(
       color: _getSelectedBgColor(youtubeId: _youtube[position].youtubeId),
       child: ListTile(
+        leading: GestureDetector(
+          onTap: () => _addSelectedAry(youtubeId: _youtube[position].youtubeId),
+          child: const Icon(
+            Icons.control_point,
+            color: Colors.white,
+          ),
+        ),
         title: DefaultTextStyle(
           style: const TextStyle(fontSize: 12),
           child: Column(
@@ -164,46 +186,16 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => _addSelectedAry(
-                        youtubeId: _youtube[position].youtubeId),
-                    child: const Icon(
-                      Icons.control_point,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Container(
-                          width: 180,
-                          margin: const EdgeInsets.symmetric(horizontal: 10),
-                          child: FadeInImage.assetNetwork(
-                            placeholder: 'assets/images/no_image.png',
-                            image:
-                                'https://img.youtube.com/vi/${_youtube[position].youtubeId}/mqdefault.jpg',
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          child: Container(
-                            width: MediaQuery.of(context).size.width - 140,
-                            color: Colors.black.withOpacity(0.5),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(_youtube[position].title),
-                                const SizedBox(height: 5),
-                                Text(
-                                    '${_youtube[position].youtubeId} / $year/$month/$day'),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                  SizedBox(
+                    width: 180,
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/no_image.png',
+                      image:
+                          'https://img.youtube.com/vi/${_youtube[position].youtubeId}/mqdefault.jpg',
                     ),
                   ),
                   Container(
+                    padding: const EdgeInsets.only(left: 20),
                     child: (_youtube[position].special == '1')
                         ? const Icon(
                             Icons.star,
@@ -214,27 +206,34 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
                             color: Colors.black.withOpacity(0.2),
                           ),
                   ),
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.topRight,
+                      child: GestureDetector(
+                        onTap: () => _openBrowser(
+                            youtubeId: _youtube[position].youtubeId),
+                        child: const Icon(Icons.link),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_youtube[position].title),
+                  const SizedBox(height: 5),
+                  Container(
+                    alignment: Alignment.topRight,
+                    child: Text(
+                        '${_youtube[position].youtubeId} / $year/$month/$day'),
+                  ),
                 ],
               ),
             ],
           ),
         ),
-
-        trailing: GestureDetector(
-          onTap: () => _openBrowser(youtubeId: _youtube[position].youtubeId),
-          child: const Icon(Icons.link),
-        ),
-
-        //
-        // trailing: GestureDetector(
-        //   onTap: () =>
-        //       _goYoutubePlayScreen(youtubeId: _youtube[position].youtubeId),
-        //   child: const Icon(
-        //     Icons.movie_creation_outlined,
-        //     color: Colors.white,
-        //   ),
-        // ),
-        //
       ),
     );
   }
@@ -261,10 +260,16 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
 
   ///
   void _uploadDeleteItems() async {
+    bool _backHomeScreen = false;
+
     if (_selectedList.isNotEmpty) {
       var _list = [];
       for (var element in _selectedList) {
         _list.add("'$element'");
+      }
+
+      if (_youtube.length == _list.length) {
+        _backHomeScreen = true;
       }
 
       await _logic.uploadBunruiItems(
@@ -273,15 +278,21 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
       );
     }
 
-    _goBunruiListScreen();
+    (_backHomeScreen) ? _goHomeScreen() : _goBunruiListScreen();
   }
 
   ///
   void _uploadEraseItems() async {
+    bool _backHomeScreen = false;
+
     if (_selectedList.isNotEmpty) {
       var _list = [];
       for (var element in _selectedList) {
         _list.add("'$element'");
+      }
+
+      if (_youtube.length == _list.length) {
+        _backHomeScreen = true;
       }
 
       await _logic.uploadBunruiItems(
@@ -290,7 +301,7 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
       );
     }
 
-    _goBunruiListScreen();
+    (_backHomeScreen) ? _goHomeScreen() : _goBunruiListScreen();
   }
 
   ///
@@ -334,15 +345,13 @@ class _BunruiListScreenState extends State<BunruiListScreen> {
     );
   }
 
-//
-  // void _goYoutubePlayScreen({required String youtubeId}) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (_) => YoutubePlayScreen(youtubeId: youtubeId),
-  //     ),
-  //   );
-  // }
-  //
-
+  ///
+  void _goHomeScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomeScreen(),
+      ),
+    );
+  }
 }

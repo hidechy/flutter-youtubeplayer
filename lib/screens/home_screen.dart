@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:http/http.dart';
+import 'package:youtubeplayer/model/youtube_data.dart';
 
 import 'dart:convert';
 
@@ -21,6 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<String> _bunruiList = [];
 
+  bool _blankExists = false;
+
   /// 初期動作
   @override
   void initState() {
@@ -40,6 +43,17 @@ class _HomeScreenState extends State<HomeScreen> {
       _bunruiList.add(data['data'][i]);
     }
     ////////////////////////////////////////
+    ////////////////////////////////////////
+    String url2 = "http://toyohide.work/BrainLog/api/getYoutubeList";
+    Map<String, String> headers2 = {'content-type': 'application/json'};
+    String body2 = json.encode({"bunrui": 'blank'});
+    Response response2 =
+        await post(Uri.parse(url2), headers: headers2, body: body2);
+    final youtubeData = youtubeDataFromJson(response2.body);
+    if (youtubeData.data.isNotEmpty) {
+      _blankExists = true;
+    }
+    ////////////////////////////////////////
 
     setState(() {});
   }
@@ -52,6 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Video Category'),
         backgroundColor: Colors.redAccent.withOpacity(0.3),
         centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _goHomeScreen(),
+          ),
+        ],
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -63,21 +83,28 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _bunruiButtonList(),
               ),
-              const Divider(
-                color: Colors.redAccent,
-                thickness: 3,
-              ),
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.redAccent.withOpacity(0.3),
-                  ),
-                  onPressed: () => _goBunruiSettingScreen(bunrui: 'undefined'),
-                  child: const Text('まだ分類されていない動画'),
-                ),
-              ),
+              (_blankExists)
+                  ? Column(
+                      children: [
+                        const Divider(
+                          color: Colors.redAccent,
+                          thickness: 3,
+                        ),
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.all(10),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.redAccent.withOpacity(0.3),
+                            ),
+                            onPressed: () =>
+                                _goBunruiSettingScreen(bunrui: 'undefined'),
+                            child: const Text('分類する'),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container()
             ],
           ),
         ],
@@ -116,35 +143,31 @@ class _HomeScreenState extends State<HomeScreen> {
   /////////////////////////////////////
 
   ///
-  void _goHomeScreen() {
+  void _goBunruiSettingScreen({required String bunrui}) {
     Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
-      ),
-    );
-  }
-
-  ///
-  void _goBunruiSettingScreen({required String bunrui}) async {
-    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => BunruiSettingScreen(bunrui: bunrui),
       ),
     );
-
-    if (result!) {
-      _goHomeScreen();
-    }
   }
 
   ///
   void _goBunruiListScreen({required String bunrui}) {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => BunruiListScreen(bunrui: bunrui),
+      ),
+    );
+  }
+
+  ///
+  void _goHomeScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomeScreen(),
       ),
     );
   }
